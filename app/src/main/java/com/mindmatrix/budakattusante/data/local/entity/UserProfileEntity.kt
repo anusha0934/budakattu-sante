@@ -12,6 +12,14 @@ data class UserProfileEntity(
     val phoneNumber: String,
     val profileImageUrl: String,
     val role: String,
+    val businessName: String,
+    val tribeName: String,
+    val upiId: String,
+    val address: String,
+    val village: String,
+    val district: String,
+    val categories: String, // Room doesn't support List<String> easily without TypeConverter, using comma-separated string
+    val description: String,
     val lastUpdated: Long = System.currentTimeMillis()
 )
 
@@ -21,7 +29,15 @@ fun UserProfileEntity.toModel() = UserProfile(
     email = email,
     phoneNumber = phoneNumber,
     profileImageUrl = profileImageUrl,
-    role = role
+    role = role,
+    businessName = businessName,
+    tribeName = tribeName,
+    upiId = upiId,
+    address = address,
+    village = village,
+    district = district,
+    categories = if (categories.isEmpty()) emptyList() else categories.split(","),
+    description = description
 )
 
 fun UserProfile.toEntity() = UserProfileEntity(
@@ -30,5 +46,13 @@ fun UserProfile.toEntity() = UserProfileEntity(
     email = email,
     phoneNumber = phoneNumber,
     profileImageUrl = profileImageUrl,
-    role = role
+    role = role,
+    businessName = businessName,
+    tribeName = tribeName,
+    upiId = upiId,
+    address = address,
+    village = village,
+    district = district,
+    categories = categories.joinToString(","),
+    description = description
 )

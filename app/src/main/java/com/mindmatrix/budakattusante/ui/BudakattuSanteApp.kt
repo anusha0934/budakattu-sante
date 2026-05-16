@@ -244,8 +244,16 @@ fun BudakattuSanteApp() {
                     onCart = { navController.navigate("cart") },
                     onViewAddresses = { navController.navigate("address_management") },
                     onViewNotifications = { navController.navigate("notifications") },
+                    onEditProfile = { navController.navigate("edit_profile") },
                     userProfileImage = userProfile?.profileImageUrl,
                     userName = userProfile?.name ?: "Mallamma"
+                )
+            }
+
+            composable("edit_profile") {
+                EditProfileScreen(
+                    profileViewModel = profileViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
 

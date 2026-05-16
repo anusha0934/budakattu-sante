@@ -6,5 +6,13 @@ data class UserProfile(
     val email: String = "",
     val phoneNumber: String = "",
     val profileImageUrl: String = "",
-    val role: String = "CUSTOMER"
+    val role: String = "CUSTOMER",
+    val businessName: String = "",
+    val tribeName: String = "",
+    val upiId: String = "",
+    val address: String = "",
+    val village: String = "",
+    val district: String = "",
+    val categories: List<String> = emptyList(),
+    val description: String = ""
 )

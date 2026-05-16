@@ -1,5 +1,6 @@
 package com.mindmatrix.budakattusante.ui.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.ktx.auth
@@ -17,9 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Requirement 1: Profile management with offline support.
- */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val firebaseGateway: FirebaseGateway,
@@ -32,10 +30,12 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message.asStateFlow()
+
     fun loadProfile() {
         val userId = Firebase.auth.currentUser?.uid ?: return
         viewModelScope.launch {
-            // Requirement 10: Load from local cache first
             val cachedProfile = userProfileDao.getProfile(userId)
             if (cachedProfile != null) {
                 _userProfile.value = cachedProfile.toModel()
@@ -48,7 +48,6 @@ class ProfileViewModel @Inject constructor(
                     _userProfile.value = remoteProfile
                     userProfileDao.insertProfile(remoteProfile.toEntity())
                 } else if (_userProfile.value == null) {
-                    // Create default profile if not exists anywhere
                     val user = Firebase.auth.currentUser
                     val newProfile = UserProfile(
                         userId = userId,
@@ -61,22 +60,28 @@ class ProfileViewModel @Inject constructor(
                     userProfileDao.insertProfile(newProfile.toEntity())
                 }
             } catch (e: Exception) {
-                // Offline fallback - handled by initial cache load
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun updateProfile(profile: UserProfile) {
+    fun updateProfile(profile: UserProfile, imageUri: Uri? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                userProfileDao.insertProfile(profile.toEntity())
-                _userProfile.value = profile
-                firebaseGateway.saveUserProfile(profile)
+                var finalProfile = profile
+                if (imageUri != null) {
+                    val imageUrl = firebaseGateway.uploadImage(imageUri.toString(), "profiles/${profile.userId}.jpg")
+                    finalProfile = profile.copy(profileImageUrl = imageUrl)
+                }
+                
+                userProfileDao.insertProfile(finalProfile.toEntity())
+                _userProfile.value = finalProfile
+                firebaseGateway.saveUserProfile(finalProfile)
+                _message.value = "Profile updated successfully!"
             } catch (e: Exception) {
-                // Background sync will handle remote update later if offline
+                _message.value = "Failed to update profile: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -86,5 +91,9 @@ class ProfileViewModel @Inject constructor(
     fun updateRole(role: UserRole) {
         val current = _userProfile.value ?: return
         updateProfile(current.copy(role = role.name))
+    }
+    
+    fun clearMessage() {
+        _message.value = null
     }
 }

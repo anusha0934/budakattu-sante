@@ -155,6 +155,7 @@ fun CustomerProfileScreen(
     onCart: () -> Unit,
     onViewAddresses: () -> Unit,
     onViewNotifications: () -> Unit,
+    onEditProfile: () -> Unit,
     userProfileImage: String?,
     userName: String
 ) {
@@ -210,7 +211,7 @@ fun CustomerProfileScreen(
 
             // Profile Options
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                ProfileOptionItem(Icons.Default.Person, "Edit Profile", "Name, Email, Phone", onClick = { /* Edit */ })
+                ProfileOptionItem(Icons.Default.Person, "Edit Profile", "Name, Email, Phone", onClick = onEditProfile)
                 ProfileOptionItem(Icons.Default.LocationOn, "Delivery Addresses", "Manage your shipping locations", onClick = onViewAddresses)
                 ProfileOptionItem(Icons.Default.History, "Order History", "Track and view past orders", onClick = onViewOrders)
                 ProfileOptionItem(Icons.Default.Notifications, "Notifications", "Alerts and updates", onClick = onViewNotifications)

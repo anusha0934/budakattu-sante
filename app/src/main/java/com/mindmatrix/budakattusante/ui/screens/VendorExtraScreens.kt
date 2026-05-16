@@ -18,15 +18,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
 import com.mindmatrix.budakattusante.data.model.Product
 import com.mindmatrix.budakattusante.ui.components.CatalogItem
-import com.mindmatrix.budakattusante.ui.components.HarvestTimelineItem
 import com.mindmatrix.budakattusante.ui.theme.*
-import com.mindmatrix.budakattusante.ui.viewmodel.VendorViewModel
 import com.mindmatrix.budakattusante.util.QrGenerator
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,123 +143,6 @@ fun BatchDetailsScreen(
                 Icon(Icons.Default.Print, null)
                 Spacer(Modifier.width(8.dp))
                 Text("Print Batch Label", fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun VendorAnalyticsScreen(
-    vendorViewModel: VendorViewModel,
-    onBack: () -> Unit
-) {
-    val analytics by vendorViewModel.analytics.collectAsStateWithLifecycle()
-    val batches by vendorViewModel.harvestBatches.collectAsStateWithLifecycle()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Analytics & Supply Log", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream)
-            )
-        },
-        containerColor = Cream
-    ) { padding ->
-        val scrollState = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(24.dp)
-        ) {
-            // AI Prediction Card (Requirement 5)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = ForestGreen),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AutoAwesome, null, tint = TribalGold)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Seasonal Demand Prediction", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "AI predicts 30% increase in Wild Honey demand next month due to festive season.",
-                        color = Color.White.copy(alpha = 0.9f),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text("Harvest Trends", style = MaterialTheme.typography.titleLarge, color = ForestGreen, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(16.dp))
-            
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Stars, contentDescription = null, tint = TribalGold)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Most Productive Family", fontWeight = FontWeight.Bold)
-                    }
-                    Text(
-                        analytics.mostProductiveFamily,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = ForestGreen,
-                        fontWeight = FontWeight.Black
-                    )
-                }
-            }
-            
-            Spacer(Modifier.height(24.dp))
-            Text("Harvest Source History", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(16.dp))
-            
-            val displayedBatches = batches.take(5)
-            displayedBatches.forEachIndexed { index, batch ->
-                HarvestTimelineItem(
-                    date = batch.harvestDate,
-                    quantity = "${batch.quantityKg} Kg",
-                    artisan = batch.familyName,
-                    isFirst = index == 0,
-                    isLast = index == displayedBatches.size - 1
-                )
-            }
-            
-            Spacer(Modifier.height(24.dp))
-            Text("Source Origin Heatmap", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = rememberCameraPositionState {
-                        position = CameraPosition.fromLatLngZoom(LatLng(11.9961, 77.1355), 9f)
-                    }
-                ) {
-                    for (batch in batches) {
-                        if (batch.latitude != 0.0) {
-                            Marker(
-                                state = rememberMarkerState(position = LatLng(batch.latitude, batch.longitude)),
-                                title = batch.productName
-                            )
-                        }
-                    }
-                }
             }
         }
     }
