@@ -3,27 +3,32 @@
 build/
 app/build/
 
-# IDE
-.idea/
-*.iml
+# Kotlin
+.kotlin/
+*.kotlin_module
 
-# Local config
+# Local configuration
 local.properties
 
-# Firebase
-google-services.json
-app/google-services.json
-
-# Logs
-*.log
-
-# Android Studio generated
+# Android Studio / IntelliJ
+.idea/
+*.iml
 captures/
 .externalNativeBuild/
 .cxx/
+
+# Logs
+*.log
+hs_err_pid*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated files
 output-metadata.json
 
-# Build outputs
+# APK / AAB
 *.apk
 *.aab
 
@@ -31,5 +36,53 @@ output-metadata.json
 *.jks
 *.keystore
 
-# Profiling / memory dumps
+# Firebase secrets
+google-services.json
+
+# Temporary files
+*.tmp
+*.temp
+
+# Profiling
 *.hprof
+
+# VS Code
+.vscode/
+
+# Mac/Linux hidden files
+*.swp
+*.swo
+
+# Java compiled
+*.class
+
+# Navigation Safe Args
+.navigation/
+
+# Room database schemas
+schemas/
+
+# WorkManager
+workdb
+
+# Compose compiler
+compose_compiler/
+
+# Crashlytics
+crashlytics-build.properties
+
+# NDK
+obj/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
