@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Budakattu Sante Android App
 
 Kotlin Android implementation for the BUDAKATTU-SANTE SOP.
@@ -36,3 +37,7 @@ The app runs offline without Firebase, but cloud sync needs a Firebase Android a
 - Leader tab: save inventory batches locally, inspect supply logs, sync pending batches.
 - Buyer tab: browse available produce, inspect details, lock a pre-order with MSP-based pricing.
 - Orders tab: see local pre-orders and whether each has synced.
+=======
+# budakattu-sante
+Offline-first tribal marketplace Android app using Kotlin, Firebase, Room DB, and GenAI.
+>>>>>>> b4bcf539b1d212ddfd9fc7038eb7add69eccc34b
