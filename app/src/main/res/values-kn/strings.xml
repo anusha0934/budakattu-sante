@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ಬುಡಕಟ್ಟು ಸಂತೆ</string>
+    <string name="welcome">ಬುಡಕಟ್ಟು ಸಂತೆಗೆ ಸುಸ್ವಾಗತ</string>
+    <string name="search_hint">ಅರಣ್ಯ ಉತ್ಪನ್ನಗಳನ್ನು ಹುಡುಕಿ...</string>
+    <string name="categories">ವರ್ಗಗಳು</string>
+    <string name="orders">ನನ್ನ ಆರ್ಡರ್‌ಗಳು</string>
+    <string name="profile">ನನ್ನ ಪ್ರೊಫೈಲ್</string>
+    <string name="cart">ಕಾರ್ಟ್</string>
+    <string name="buy_now">ಈಗ ಖರೀದಿಸಿ</string>
+    <string name="pre_order">ಮುಂಗಡ ಆರ್ಡರ್</string>
+    <string name="harvest_date">ಕೊಯ್ಲು ದಿನಾಂಕ</string>
+    <string name="tribal_artisan">ಬುಡಕಟ್ಟು ಕುಶಲಕರ್ಮಿ</string>
+    <string name="pure_organic">ಶುದ್ಧ ಮತ್ತು ಸಾವಯವ</string>
+    <string name="fair_trade">ನ್ಯಾಯೋಚಿತ ವ್ಯಾಪಾರ</string>
+</resources>

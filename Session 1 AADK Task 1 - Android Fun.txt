@@ -1,0 +1,100 @@
+Session 1: AADK Task 1 - Android Fundamentals: Learn by Doing
+
+1. Introduction to Android
+
+Android is an operating system developed by Google for smartphones, tablets, smart TVs, watches, and other devices. It allows users to install and use applications for communication, entertainment, education, shopping, and productivity.
+
+Features of Android:
+- Open-source platform
+- User-friendly interface
+- Supports millions of apps
+- Customizable design
+- Multi-language support
+- Strong security features
+
+2. Android Ecosystem
+
+The Android ecosystem includes:
+- Android devices
+- Applications
+- Google Play Store
+- Android developers
+- Android Studio
+- Cloud services and APIs
+
+Examples of Android Devices:
+- Smartphones
+- Tablets
+- Smart TVs
+- Smartwatches
+
+3. Importance of Accessibility in Android Apps
+
+Accessibility helps people with disabilities use mobile applications easily.
+
+Accessibility features include:
+- Voice assistance
+- Screen readers
+- Large text support
+- High contrast mode
+- Captions for videos
+- Easy navigation
+
+Benefits:
+- Improves user experience
+- Makes apps inclusive
+- Helps elderly and disabled users
+
+4. Introduction to Android Studio
+
+Android Studio is the official IDE for Android app development.
+
+Main features:
+- Code editor
+- Emulator
+- Layout designer
+- Debugging tools
+- APK generation
+
+Main components of Android Studio:
+- MainActivity.kt
+- activity_main.xml
+- AndroidManifest.xml
+- Gradle Scripts
+
+5. Structure of an Android App
+
+An Android app mainly contains:
+- Activities
+- Layouts
+- Resources
+- Manifest file
+
+Example:
+- Activity controls app logic
+- XML file controls UI design
+
+6. My First App Idea
+
+App Name:
+Student Reminder App
+
+Purpose:
+This app helps students manage daily tasks and reminders.
+
+Features:
+- Add tasks
+- Set reminders
+- Mark tasks as completed
+- Simple user interface
+
+Target Users:
+Students and teachers
+
+Accessibility Features:
+- Large text option
+- Voice reminder support
+- Simple navigation
+
+Conclusion:
+This task helped me understand Android fundamentals, Android Studio, app structure, and accessibility concepts. It also improved my understanding of how Android apps are planned and developed.
