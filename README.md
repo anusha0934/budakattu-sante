@@ -1,35 +1,35 @@
-# BUDAKATTU SANTE
+# Budakattu Sante
 
-Traditional Tribal Harvest Marketplace
+## Traditional Tribal Harvest Marketplace
 
-Budakattu Sante is an AI-enabled Android marketplace created to support tribal communities, artisans, and forest harvest vendors. The application connects tribal sellers directly with customers through a fair-trade digital platform focused on transparency, sustainability, and rural accessibility.
+Budakattu Sante is an AI-enabled Android marketplace designed to support tribal communities, forest harvest vendors, and rural artisans through a transparent and sustainable digital commerce platform.
 
-This project was developed as a full-stack Android application using Kotlin, Jetpack Compose, Firebase, Google Maps, and AI-assisted features.
+The application connects tribal sellers directly with customers, reducing middlemen exploitation and improving fair-trade accessibility.
 
-The platform supports tribal product sales, harvest tracking, preorder systems, supply log management, multilingual accessibility, and audio-based interaction for semi-literate users.
+Built using Kotlin, Jetpack Compose, Firebase, Google Maps APIs, and AI-assisted accessibility features, the platform supports product sales, harvest tracking, preorder systems, multilingual accessibility, and audio-assisted interaction for semi-literate users.
 
 ---
 
-## Problem Statement
+# Problem Statement
 
-Many tribal artisans and forest product collectors face problems such as:
+Many tribal artisans and forest product collectors face major challenges:
 
-* Lack of direct market access
+* Limited direct market access
 * Middlemen exploitation
-* No transparent pricing system
-* Poor digital visibility
+* Lack of transparent pricing
+* Low digital visibility
 * No product traceability
 * Language and literacy barriers
 
-Budakattu Sante solves these issues by providing a transparent digital marketplace with fair-trade workflows and accessible user experience.
+Budakattu Sante addresses these issues through a fair-trade digital ecosystem with transparent workflows and accessible user experience.
 
 ---
 
-## Main Features
+# Main Features
 
-### Customer Features
+## Customer Features
 
-* Browse tribal forest products
+* Browse tribal and forest products
 * Search and filter products
 * Wishlist and basket management
 * Place product orders
@@ -40,7 +40,7 @@ Budakattu Sante solves these issues by providing a transparent digital marketpla
 * Audio-based product guidance
 * Product categories and recommendations
 
-### Vendor Features
+## Vendor Features
 
 * Vendor profile management
 * Edit business details
@@ -54,52 +54,50 @@ Budakattu Sante solves these issues by providing a transparent digital marketpla
 * Tribal artisan management
 * Harvest analytics dashboard
 
-### Admin Features
+## Admin Features
 
-* Approve vendors
-* Monitor tribal product activity
-* Manage fair-trade compliance
-* Analytics and reports
-* Market monitoring
-
----
+* Vendor approval system
+* Product activity monitoring
+* Fair-trade compliance management
+* Analytics and reporting
+* Marketplace monitoring
 
 ## AI and Accessibility Features
 
 * Voice-to-text product search
 * Audio-based product descriptions
-* Semi-literate user support
-* AI recommendations for forest products
+* Semi-literate user accessibility support
+* AI-based product recommendations
 * Smart notifications and alerts
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-### Frontend
+## Frontend
 
 * Kotlin
 * Jetpack Compose
 * Material Design 3
 
-### Backend
+## Backend
 
 * Firebase Authentication
 * Firebase Firestore
 * Firebase Storage
 
-### Other Technologies
+## Additional Technologies
 
 * Google Maps API
 * Google Location Services
-* WorkManager
 * Room Database
+* WorkManager
 * Voice Recognition APIs
 * Git and GitHub
 
 ---
 
-## Project Modules
+# Project Modules
 
 * Authentication Module
 * Customer Marketplace
@@ -114,9 +112,9 @@ Budakattu Sante solves these issues by providing a transparent digital marketpla
 
 ---
 
-## Folder Structure
+# Folder Structure
 
-```text id="z92f5d"
+```text
 app/
  ├── src/main/java/com/mindmatrix/budakattusante
  │    ├── ui
@@ -132,7 +130,7 @@ app/
 
 ---
 
-## Screens Included
+# Application Screens
 
 * Splash Screen
 * Role Selection Screen
@@ -140,7 +138,7 @@ app/
 * Vendor Dashboard
 * Vendor Profile
 * Inventory Screen
-* Supply Log & Tracking
+* Supply Log and Tracking
 * Harvest Logging
 * Order Management
 * Notifications
@@ -150,7 +148,7 @@ app/
 
 ---
 
-## Working Functionalities
+# Working Functionalities
 
 * GitHub repository integration
 * Firebase authentication
@@ -165,16 +163,16 @@ app/
 
 ---
 
-## Payment Features
+# Payment Features
 
-Supported payment methods:
+## Supported Payment Methods
 
 * UPI
 * UPI ID
 * Cash on Delivery
-* ATM/Card Payment
+* ATM and Card Payment
 
-Customer checkout includes:
+## Checkout Features
 
 * Address form
 * Payment method selection
@@ -183,9 +181,9 @@ Customer checkout includes:
 
 ---
 
-## Supply Log and Traceability
+# Supply Log and Product Traceability
 
-The application tracks:
+The platform tracks:
 
 * Forest region
 * Village or Podu source
@@ -195,65 +193,46 @@ The application tracks:
 * Product origin mapping
 * Supply chain visibility
 
-This improves transparency and fair-trade trust.
+This improves transparency, trust, and fair-trade accountability.
 
 ---
 
-## Installation Steps
+# Installation Guide
 
-### Clone Repository
+## Clone Repository
 
-```bash id="lf99k6"
+```bash
 git clone https://github.com/anusha0934/budakattu-sante.git
 ```
 
-### Open Project
+## Open Project
 
-Open the project using:
+Open the project using Android Studio.
 
-```text id="j87f1h"
-Android Studio
+## Firebase Setup
+
+Add the Firebase configuration file:
+
+```text
+app/google-services.json
 ```
 
-### Firebase Setup
+Enable the following services:
 
-Add your Firebase configuration file:
-
-```text id="v9l1md"
-google-services.json
-```
-
-inside:
-
-```text id="9mjlwm"
-app/
-```
-
-Enable:
-
-* Authentication
+* Firebase Authentication
 * Firestore Database
 * Firebase Storage
 
----
-
 ## Build and Run
 
-### Sync Gradle
-
-```bash id="b3d4ks"
-Sync Project with Gradle Files
-```
-
-### Run App
-
-```bash id="0f7h4v"
-Run on Android Emulator or Physical Device
-```
+1. Sync Gradle
+2. Sync Project with Gradle Files
+3. Run the application
+4. Use Android Emulator or physical device
 
 ---
 
-## Future Improvements
+# Future Improvements
 
 * Multilingual tribal language support
 * AI chatbot assistant
@@ -265,15 +244,17 @@ Run on Android Emulator or Physical Device
 
 ---
 
-## GitHub Repository
+# GitHub Repository
+
+Repository Link:
 
 [Budakattu Sante GitHub Repository](https://github.com/anusha0934/budakattu-sante?utm_source=chatgpt.com)
 
 ---
 
-## Project Status
+# Project Status
 
-Current status:
+Current Status:
 
 * Active development
 * Firebase integrated
@@ -283,9 +264,9 @@ Current status:
 
 ---
 
-## Developer
+# Developer
 
-Anusha K A
+## Anusha K A
+
 BE in Data Science
 Android and AI Developer
-
