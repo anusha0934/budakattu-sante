@@ -197,6 +197,42 @@ This improves transparency, trust, and fair-trade accountability.
 
 ---
 
+# App Screenshots
+
+## Vendor Dashboard
+![Vendor Dashboard](screenshots/vendorscreen.jpeg)
+
+## Business Analytics
+![Business Analytics](screenshots/businessanalytics.jpeg)
+
+## Vendor Profile
+![Vendor Profile](screenshots/vendorprofile.jpeg)
+
+## Inventory Management
+![Inventory](screenshots/inventory.jpeg)
+
+## Order Management
+![Order Management](screenshots/ordermangment.jpeg)
+
+## Notifications
+![Notifications](screenshots/notification.jpeg)
+
+## Customer Profile
+![Customer Profile](screenshots/customerprofile.jpeg)
+
+## Customer Home Screen
+![Customer Home](screenshots/customerscreen.jpeg)
+
+## Tribal Basket
+![Tribal Basket](screenshots/tribal order.jpeg)
+
+## Login Screen
+![Login Screen](screenshots/loginscreen.jpeg)
+
+## Login Email and Phone
+![Login Email Phone](screenshots/loginemailphone.jpeg)
+
+
 # Installation Guide
 
 ## Clone Repository
