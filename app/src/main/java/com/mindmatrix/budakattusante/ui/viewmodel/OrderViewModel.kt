@@ -76,6 +76,9 @@ class OrderViewModel @Inject constructor(
     var pendingOrderDetails by mutableStateOf<PendingOrder?>(null)
         private set
 
+    var isCartCheckout by mutableStateOf(false)
+        private set
+
     data class PendingOrder(
         val product: Product,
         val qty: Double,
@@ -114,9 +117,21 @@ class OrderViewModel @Inject constructor(
     }
 
     fun setPendingOrder(product: Product, qty: Double, name: String, phone: String, address: String, isPreOrder: Boolean = false) {
+        isCartCheckout = false
         pendingOrderDetails = PendingOrder(product, qty, name, phone, address, isPreOrder)
         _discountAmount.value = 0.0
         _appliedCoupon.value = null
+    }
+
+    fun setPendingCartCheckout(name: String, phone: String, address: String) {
+        isCartCheckout = true
+        pendingOrderDetails = PendingOrder(
+            product = Product(name = "Multiple Items"),
+            qty = 0.0,
+            name = name,
+            phone = phone,
+            address = address
+        )
     }
 
     private fun recalculateCoupon() {
@@ -184,6 +199,65 @@ class OrderViewModel @Inject constructor(
                 pendingOrderDetails = null
             } catch (e: Exception) {
                 _message.value = e.message ?: "Could not place order"
+            } finally {
+                _placing.value = false
+            }
+        }
+    }
+
+    fun placeCartOrders(
+        buyerId: String,
+        buyerName: String,
+        buyerPhone: String,
+        buyerAddress: String,
+        paymentMethod: String
+    ) {
+        val items = uiState.value.cartItems
+        if (items.isEmpty()) return
+        
+        viewModelScope.launch {
+            _placing.value = true
+            try {
+                val subtotal = items.sumOf { it.pricePerKg * it.quantity }
+                val totalDiscount = _discountAmount.value
+                val shipping = if (subtotal > 0 && subtotal < 1000) 50.0 else 0.0
+                
+                for ((index, item) in items.withIndex()) {
+                    val dummyProduct = Product(
+                        productId = item.productId,
+                        name = item.name,
+                        pricePerKg = item.pricePerKg,
+                        imageUrl = item.imageUrl,
+                        vendorId = item.vendorId,
+                        isPreOrder = item.isPreOrder
+                    )
+                    
+                    // Simple allocation: put all fees/discounts on first item
+                    val itemTotal = if (index == 0) {
+                        (item.pricePerKg * item.quantity) + shipping - totalDiscount
+                    } else {
+                        item.pricePerKg * item.quantity
+                    }
+
+                    repository.placeOrder(
+                        product = dummyProduct,
+                        quantityKg = item.quantity,
+                        buyerName = buyerName,
+                        buyerPhone = buyerPhone,
+                        buyerAddress = buyerAddress,
+                        buyerId = buyerId,
+                        paymentMethod = paymentMethod,
+                        totalAmount = itemTotal,
+                        isPreOrder = item.isPreOrder
+                    )
+                }
+                repository.clearCart()
+                _latestOrder.value = null 
+                _message.value = "Order placed successfully!"
+                pendingOrderDetails = null
+                isCartCheckout = false
+            } catch (e: Exception) {
+                _message.value = e.message ?: "Could not place orders"
             } finally {
                 _placing.value = false
             }

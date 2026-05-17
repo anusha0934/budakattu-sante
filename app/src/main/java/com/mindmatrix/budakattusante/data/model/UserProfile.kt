@@ -13,6 +13,9 @@ data class UserProfile(
     val address: String = "",
     val village: String = "",
     val district: String = "",
+    val state: String = "",
+    val forestRegion: String = "",
     val categories: List<String> = emptyList(),
-    val description: String = ""
+    val description: String = "",
+    val isApproved: Boolean = false
 )

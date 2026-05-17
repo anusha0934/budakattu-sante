@@ -2,12 +2,16 @@ package com.mindmatrix.budakattusante.data.repository
 
 import com.mindmatrix.budakattusante.data.local.dao.AddressDao
 import com.mindmatrix.budakattusante.data.local.entity.AddressEntity
+import com.mindmatrix.budakattusante.data.local.entity.toModel
+import com.mindmatrix.budakattusante.data.local.entity.toEntity
 import com.mindmatrix.budakattusante.data.model.Address
-import com.mindmatrix.budakattusante.data.model.AddressType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AddressRepository(private val addressDao: AddressDao) {
+@Singleton
+class AddressRepository @Inject constructor(private val addressDao: AddressDao) {
     val allAddresses: Flow<List<Address>> = addressDao.getAllAddresses().map { entities ->
         entities.map { it.toModel() }
     }
@@ -23,28 +27,4 @@ class AddressRepository(private val addressDao: AddressDao) {
     suspend fun setDefaultAddress(id: String) {
         addressDao.setDefaultAddress(id)
     }
-
-    private fun AddressEntity.toModel() = Address(
-        id = id,
-        name = name,
-        phone = phone,
-        street = street,
-        city = city,
-        state = state,
-        zipCode = zipCode,
-        isDefault = isDefault,
-        type = type
-    )
-
-    private fun Address.toEntity() = AddressEntity(
-        id = id,
-        name = name,
-        phone = phone,
-        street = street,
-        city = city,
-        state = state,
-        zipCode = zipCode,
-        isDefault = isDefault,
-        type = type
-    )
 }

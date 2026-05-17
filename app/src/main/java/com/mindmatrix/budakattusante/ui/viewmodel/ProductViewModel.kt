@@ -29,6 +29,7 @@ data class ProductUiState(
     val wishlist: List<WishlistEntity> = emptyList(),
     val pendingSyncCount: Int = 0,
     val loading: Boolean = false,
+    val isPublishing: Boolean = false,
     val message: String? = null,
     val searchQuery: String = "",
     val selectedCategory: String? = null
@@ -43,60 +44,74 @@ class ProductViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     private val _selectedCategory = MutableStateFlow<String?>(null)
     private val _loading = MutableStateFlow(false)
+    private val _publishing = MutableStateFlow(false)
     private val _message = MutableStateFlow<String?>(null)
     private val _smartAiRecommendations = MutableStateFlow("Finding the best forest products for you...")
 
-    /**
-     * Requirement 10 & 16: Combine multiple data streams into a single UI state.
-     * Fixed type inference issues for production stability.
-     */
+    private data class CombinedData1(
+        val products: List<Product>,
+        val logs: List<SupplyLog>,
+        val syncCount: Int,
+        val wishlist: List<WishlistEntity>
+    )
+
+    private data class CombinedData2(
+        val query: String,
+        val category: String?,
+        val loading: Boolean,
+        val publishing: Boolean,
+        val message: String?,
+        val aiRecs: String
+    )
+
     val uiState: StateFlow<ProductUiState> = combine(
-        listOf(
+        combine(
             repository.products,
             repository.localSupplyLogs,
             repository.pendingSyncCount,
-            repository.wishlistItems,
-            _searchQuery,
-            _selectedCategory,
-            _loading,
-            _message,
-            _smartAiRecommendations
-        )
-    ) { array ->
-        val products = array[0] as List<Product>
-        val logs = array[1] as List<SupplyLog>
-        val syncCount = array[2] as Int
-        val wishlist = array[3] as List<WishlistEntity>
-        val query = array[4] as String
-        val category = array[5] as String?
-        val loading = array[6] as Boolean
-        val message = array[7] as String?
-        val aiRecs = array[8] as String
-
-        val filtered = products.filter { product ->
-            val matchesQuery = query.isBlank() || 
-                               product.name.contains(query, ignoreCase = true) || 
-                               product.category.contains(query, ignoreCase = true) ||
-                               product.familyName.contains(query, ignoreCase = true) ||
-                               product.village.contains(query, ignoreCase = true)
-            val matchesCategory = category == null || product.category.equals(category, ignoreCase = true)
+            repository.wishlistItems
+        ) { products, logs, syncCount, wishlist ->
+            CombinedData1(products, logs, syncCount, wishlist)
+        },
+        combine(
+            combine(_searchQuery, _selectedCategory, _loading) { q, c, l -> Triple(q, c, l) },
+            combine(_publishing, _message, _smartAiRecommendations) { p, m, a -> Triple(p, m, a) }
+        ) { t1, t2 ->
+            CombinedData2(
+                query = t1.first,
+                category = t1.second,
+                loading = t1.third,
+                publishing = t2.first,
+                message = t2.second,
+                aiRecs = t2.third
+            )
+        }
+    ) { d1, d2 ->
+        val filtered = d1.products.filter { product ->
+            val matchesQuery = d2.query.isBlank() || 
+                               product.name.contains(d2.query, ignoreCase = true) || 
+                               product.category.contains(d2.query, ignoreCase = true) ||
+                               product.familyName.contains(d2.query, ignoreCase = true) ||
+                               product.village.contains(d2.query, ignoreCase = true)
+            val matchesCategory = d2.category == null || product.category.equals(d2.category, ignoreCase = true)
             matchesQuery && matchesCategory
         }
 
         ProductUiState(
-            catalog = products,
+            catalog = d1.products,
             filteredProducts = filtered,
-            localProducts = products.filter { it.isLocalPendingSync },
-            supplyLogs = logs,
-            recommendations = products.filter { it.rating >= 4.5 && !it.isPreOrder }.take(5),
-            smartAiRecommendations = aiRecs,
-            upcomingHarvests = products.filter { it.isPreOrder },
-            wishlist = wishlist,
-            pendingSyncCount = syncCount,
-            loading = loading,
-            message = message,
-            searchQuery = query,
-            selectedCategory = category
+            localProducts = d1.products.filter { it.isLocalPendingSync },
+            supplyLogs = d1.logs,
+            recommendations = d1.products.filter { it.rating >= 4.5 && !it.isPreOrder }.take(5),
+            smartAiRecommendations = d2.aiRecs,
+            upcomingHarvests = d1.products.filter { it.isPreOrder },
+            wishlist = d1.wishlist,
+            pendingSyncCount = d1.syncCount,
+            loading = d2.loading,
+            isPublishing = d2.publishing,
+            message = d2.message,
+            searchQuery = d2.query,
+            selectedCategory = d2.category
         )
     }.stateIn(
         scope = viewModelScope,
@@ -109,9 +124,6 @@ class ProductViewModel @Inject constructor(
         fetchSmartRecommendations()
     }
 
-    /**
-     * Requirement 5 & 8: GenAI smart recommendations based on current catalog.
-     */
     fun fetchSmartRecommendations() {
         viewModelScope.launch {
             val productNames = uiState.value.catalog.map { it.name }.take(10)
@@ -179,14 +191,21 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-    fun addBatch(batch: InventoryBatchEntity) {
-        viewModelScope.launch {
-            try {
-                repository.addInventoryBatch(batch)
-                _message.value = "Harvest logged offline. Will sync automatically."
-            } catch (e: Exception) {
-                _message.value = "Error: ${e.message}"
-            }
+    /**
+     * Requirement 7: Add harvest batch.
+     * Uses _publishing state to avoid being blocked by _loading (catalog refresh).
+     */
+    suspend fun addBatch(batch: InventoryBatchEntity): Boolean {
+        _publishing.value = true
+        return try {
+            repository.addInventoryBatch(batch)
+            _message.value = "Harvest logged successfully! Syncing to cloud..."
+            true
+        } catch (e: Exception) {
+            _message.value = "Error: ${e.message}"
+            false
+        } finally {
+            _publishing.value = false
         }
     }
 

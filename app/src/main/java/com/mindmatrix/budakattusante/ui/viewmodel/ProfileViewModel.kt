@@ -9,8 +9,8 @@ import com.mindmatrix.budakattusante.data.local.dao.UserProfileDao
 import com.mindmatrix.budakattusante.data.local.entity.toEntity
 import com.mindmatrix.budakattusante.data.local.entity.toModel
 import com.mindmatrix.budakattusante.data.model.UserProfile
+import com.mindmatrix.budakattusante.data.model.UserRole
 import com.mindmatrix.budakattusante.data.remote.FirebaseGateway
-import com.mindmatrix.budakattusante.ui.screens.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -19,13 +19,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mindmatrix.budakattusante.data.local.entity.InventoryBatchEntity
 import com.mindmatrix.budakattusante.data.local.entity.MspEntity
+import com.mindmatrix.budakattusante.data.local.entity.OrderEntity
+import com.mindmatrix.budakattusante.data.model.UserProfile
 import com.mindmatrix.budakattusante.ui.theme.*
 import com.mindmatrix.budakattusante.ui.viewmodel.AdminViewModel
 
-/**
- * Requirement 7: Complete Admin Dashboard.
- * Allows admins to approve products, manage MSP, and view system analytics.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
@@ -34,20 +32,30 @@ fun AdminDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Pending", "MSP", "Analytics")
+    val tabs = listOf("Products", "Vendors", "Orders", "MSP")
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Admin Panel", fontWeight = FontWeight.Bold) },
+                title = { Text("Admin Control Center", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream),
+                actions = {
+                    IconButton(onClick = { /* Refresh */ }) {
+                        Icon(Icons.Default.Refresh, null, tint = ForestGreen)
+                    }
+                }
             )
         },
         containerColor = Cream
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            TabRow(selectedTabIndex = selectedTab, containerColor = Color.White, contentColor = ForestGreen) {
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.White,
+                contentColor = ForestGreen,
+                edgePadding = 16.dp
+            ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
                 }
@@ -55,8 +63,9 @@ fun AdminDashboardScreen(
 
             when (selectedTab) {
                 0 -> PendingApprovalsList(uiState.pendingBatches, viewModel)
-                1 -> MspManagementSection(uiState.mspData, viewModel)
-                2 -> AdminAnalyticsSection()
+                1 -> VendorApprovalsSection(viewModel)
+                2 -> OrderMonitoringSection(viewModel)
+                3 -> MspManagementSection(uiState.mspData, viewModel)
             }
         }
     }
@@ -73,29 +82,33 @@ fun PendingApprovalsList(batches: List<InventoryBatchEntity>, viewModel: AdminVi
             items(batches) { batch ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(2.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(batch.productName, style = MaterialTheme.typography.titleLarge, color = ForestGreen)
-                                Text("Artisan: ${batch.familyName}", color = EarthBrown)
+                                Text(batch.productName, style = MaterialTheme.typography.titleLarge, color = ForestGreen, fontWeight = FontWeight.Bold)
+                                Text("Artisan: ${batch.familyName}", color = EarthBrown, style = MaterialTheme.typography.bodySmall)
+                                Text("Village: ${batch.village}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
                             }
-                            Text("₹${batch.pricePerKg.toInt()}/kg", fontWeight = FontWeight.Bold)
+                            Text("₹${batch.pricePerKg.toInt()}/kg", fontWeight = FontWeight.Black, color = ForestGreen, fontSize = 18.sp)
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Text(batch.description, style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                        Spacer(Modifier.height(12.dp))
+                        Text(batch.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3, color = Color.DarkGray)
                         Spacer(Modifier.height(16.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedButton(
                                 onClick = { viewModel.rejectBatch(batch.batchId) },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
                             ) { Text("Reject") }
                             Button(
                                 onClick = { viewModel.approveBatch(batch.batchId) },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = ForestGreen)
                             ) { Text("Approve") }
                         }
@@ -107,6 +120,26 @@ fun PendingApprovalsList(batches: List<InventoryBatchEntity>, viewModel: AdminVi
 }
 
 @Composable
+fun VendorApprovalsSection(viewModel: AdminViewModel) {
+    // Implementation for vendor registration approvals
+    // Placeholder UI
+    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(Icons.Default.Store, null, modifier = Modifier.size(64.dp), tint = ForestGreen.copy(alpha = 0.2f))
+        Text("Vendor Registration Approvals", style = MaterialTheme.typography.titleMedium, color = Color.Gray)
+        Text("Feature coming in next sync...", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
+    }
+}
+
+@Composable
+fun OrderMonitoringSection(viewModel: AdminViewModel) {
+    // Implementation for monitoring all orders
+    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(Icons.Default.Assignment, null, modifier = Modifier.size(64.dp), tint = ForestGreen.copy(alpha = 0.2f))
+        Text("Order Monitoring Dashboard", style = MaterialTheme.typography.titleMedium, color = Color.Gray)
+    }
+}
+
+@Composable
 fun MspManagementSection(mspList: List<MspEntity>, viewModel: AdminViewModel) {
     var showDialog by remember { mutableStateOf(false) }
     var editingMsp by remember { mutableStateOf<MspEntity?>(null) }
@@ -114,25 +147,33 @@ fun MspManagementSection(mspList: List<MspEntity>, viewModel: AdminViewModel) {
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(mspList) { msp ->
-                ListItem(
-                    headlineContent = { Text(msp.category, fontWeight = FontWeight.Bold) },
-                    supportingContent = { Text("MSP: ₹${msp.approvedMsp} • Authority: ${msp.authority}") },
-                    trailingContent = {
-                        IconButton(onClick = { editingMsp = msp; showDialog = true }) {
-                            Icon(Icons.Default.Edit, null, tint = ForestGreen)
-                        }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.White)
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    ListItem(
+                        headlineContent = { Text(msp.category, fontWeight = FontWeight.Bold, color = ForestGreen) },
+                        supportingContent = { Text("MSP: ₹${msp.approvedMsp} • Market: ₹${msp.marketPrice}") },
+                        trailingContent = {
+                            IconButton(onClick = { editingMsp = msp; showDialog = true }) {
+                                Icon(Icons.Default.Edit, null, tint = ForestGreen)
+                            }
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                    )
+                }
             }
         }
         Button(
             onClick = { editingMsp = null; showDialog = true },
-            modifier = Modifier.fillMaxWidth().padding(16.dp).height(56.dp),
+            modifier = Modifier.fillMaxWidth().padding(24.dp).height(56.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = ForestGreen)
         ) {
             Icon(Icons.Default.Add, null)
-            Text("Add New MSP Record")
+            Spacer(Modifier.width(8.dp))
+            Text("Add New MSP Record", fontWeight = FontWeight.Bold)
         }
     }
 
@@ -153,49 +194,19 @@ fun UpdateMspDialog(msp: MspEntity?, onDismiss: () -> Unit, onSave: (MspEntity) 
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (msp == null) "New MSP Entry" else "Update MSP") },
+        title = { Text(if (msp == null) "New MSP Entry" else "Update MSP", fontWeight = FontWeight.Bold, color = ForestGreen) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category") }, enabled = msp == null)
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Approved MSP (₹)") })
-                OutlinedTextField(value = marketPrice, onValueChange = { marketPrice = it }, label = { Text("Market Price (₹)") })
+                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category") }, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Approved MSP (₹)") }, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = marketPrice, onValueChange = { marketPrice = it }, label = { Text("Market Price (₹)") }, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
             Button(onClick = { 
                 onSave(MspEntity(category, price.toDoubleOrNull() ?: 0.0, marketPrice.toDoubleOrNull() ?: 0.0, "2026-01-01")) 
-            }) { Text("Save") }
+            }, colors = ButtonDefaults.buttonColors(containerColor = ForestGreen)) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
-}
-
-@Composable
-fun AdminAnalyticsSection() {
-    Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
-        Text("System Overview", style = MaterialTheme.typography.titleLarge, color = ForestGreen, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(16.dp))
-        
-        AnalyticsStatRow("Total Tribal Revenue", "₹12,45,000")
-        AnalyticsStatRow("Active Forest Producers", "142 Families")
-        AnalyticsStatRow("Completed Deliveries", "892 Orders")
-        
-        Spacer(Modifier.height(24.dp))
-        Text("Supply Chain Integrity", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(12.dp))
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-            Column(Modifier.padding(16.dp)) {
-                Text("100% Products Traceable", color = ForestGreen, fontWeight = FontWeight.Bold)
-                Text("QR Verification Active", style = MaterialTheme.typography.bodySmall)
-            }
-        }
-    }
-}
-
-@Composable
-fun AnalyticsStatRow(label: String, value: String) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = Color.Gray)
-        Text(value, fontWeight = FontWeight.Bold, color = ForestGreen)
-    }
 }

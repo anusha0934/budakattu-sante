@@ -18,8 +18,11 @@ data class UserProfileEntity(
     val address: String,
     val village: String,
     val district: String,
+    val state: String = "",
+    val forestRegion: String = "",
     val categories: String, // Room doesn't support List<String> easily without TypeConverter, using comma-separated string
     val description: String,
+    val isApproved: Boolean = false,
     val lastUpdated: Long = System.currentTimeMillis()
 )
 
@@ -36,8 +39,11 @@ fun UserProfileEntity.toModel() = UserProfile(
     address = address,
     village = village,
     district = district,
+    state = state,
+    forestRegion = forestRegion,
     categories = if (categories.isEmpty()) emptyList() else categories.split(","),
-    description = description
+    description = description,
+    isApproved = isApproved
 )
 
 fun UserProfile.toEntity() = UserProfileEntity(
@@ -53,6 +59,9 @@ fun UserProfile.toEntity() = UserProfileEntity(
     address = address,
     village = village,
     district = district,
+    state = state,
+    forestRegion = forestRegion,
     categories = categories.joinToString(","),
-    description = description
+    description = description,
+    isApproved = isApproved
 )

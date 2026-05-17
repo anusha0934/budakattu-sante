@@ -21,6 +21,7 @@ data class OrderEntity(
     val totalAmount: Double,
     val orderStatus: String = "RESERVED", // RESERVED, PENDING_HARVEST, READY_FOR_DELIVERY, SHIPPED, DELIVERED
     val paymentMethod: String = "PENDING",
+    val paymentStatus: String = "PENDING", // PENDING, COMPLETED, FAILED
     val deliveryDate: String,
     val timestamp: Long = System.currentTimeMillis(),
     val isSynced: Boolean = false,

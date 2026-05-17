@@ -10,7 +10,7 @@ object ExportUtils {
     fun exportSupplyLogToCsv(context: Context, logs: List<SupplyLog>) {
         val header = "BatchID,Product,Artisan,Quantity,HarvestDate\n"
         val csvData = header + logs.joinToString("\n") { 
-            "${it.batchId},${it.productName},${it.familyName},${it.quantityKg},${it.harvestDate}" 
+            "${it.batchId},${it.productName},${it.familyName},${it.totalQuantityKg},${it.harvestDate}"
         }
 
         val file = File(context.cacheDir, "supply_report.csv")

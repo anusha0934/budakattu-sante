@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,8 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,15 +46,12 @@ import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.mindmatrix.budakattusante.R
+import com.mindmatrix.budakattusante.data.model.UserRole
 import com.mindmatrix.budakattusante.ui.components.BudakattuEmblem
 import com.mindmatrix.budakattusante.ui.theme.Cream
 import com.mindmatrix.budakattusante.ui.theme.EarthBrown
 import com.mindmatrix.budakattusante.ui.theme.ForestGreen
 import java.util.concurrent.TimeUnit
-
-enum class UserRole {
-    VENDOR, CUSTOMER, ADMIN, NONE
-}
 
 @Composable
 fun IdentityGateScreen(onRoleSelected: (UserRole) -> Unit) {
@@ -228,6 +222,7 @@ fun IdentityCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     navController: NavController,
@@ -237,7 +232,7 @@ fun LoginScreen(
     val activity = context as? Activity
     val auth = Firebase.auth
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }

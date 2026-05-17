@@ -30,7 +30,7 @@ data class Product(
     val village: String = "",
     val collectionZone: String = "",
     val location: String = "B.R. Hills",    
-    val locationLat: Double = 11.99, // Example coordinates for B.R. Hills
+    val locationLat: Double = 11.99, 
     val locationLng: Double = 77.13,
     val rating: Double = 4.8,               
     val sellerPhone: String = "",
@@ -56,7 +56,7 @@ data class Product(
     var preorderCount: Int = 0,
     var expectedHarvestDate: String = "",
     
-    // Supply Chain
+    // Supply Chain Timeline
     val supplyChainTimeline: List<TimelineEvent> = emptyList()
 ) {
     val isPreOrderAvailable: Boolean

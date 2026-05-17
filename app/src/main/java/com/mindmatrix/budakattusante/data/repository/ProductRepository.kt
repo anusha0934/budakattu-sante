@@ -241,9 +241,15 @@ class ProductRepository @Inject constructor(
 
     // Mapper methods
     private fun InventoryBatchEntity.toSupplyLog() = SupplyLog(
-        batchId = batchId, productName = productName, category = category,
-        quantityKg = quantityKg, pricePerKg = pricePerKg, familyName = familyName,
-        harvestDate = harvestDate, synced = isSynced
+        batchId = batchId, 
+        productName = productName, 
+        category = category,
+        totalQuantityKg = quantityKg, 
+        pendingStockKg = quantityKg,
+        earnings = quantityKg * pricePerKg,
+        familyName = familyName,
+        harvestDate = harvestDate, 
+        synced = isSynced
     )
 
     private fun InventoryBatchEntity.toProduct() = Product(

@@ -31,7 +31,7 @@ import net.sqlcipher.database.SupportFactory
         DraftEntity::class,
         WishlistEntity::class
     ],
-    version = 17,
+    version = 22,
     exportSchema = false
 )
 abstract class BudakattuDatabase : RoomDatabase() {

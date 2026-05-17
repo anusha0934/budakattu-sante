@@ -382,6 +382,41 @@ fun ErrorState(onRetry: () -> Unit) {
 }
 
 @Composable
+fun StockProgress(current: Int, total: Int) {
+    val progress = if (total > 0) current.toFloat() / total.toFloat() else 0f
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Pre-order Progress",
+                style = MaterialTheme.typography.labelLarge,
+                color = ForestGreen,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "$current / $total Reserved",
+                style = MaterialTheme.typography.labelMedium,
+                color = EarthBrown
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = AccentOrange,
+            trackColor = AccentOrange.copy(alpha = 0.2f)
+        )
+    }
+}
+
+@Composable
 fun StatusChip(status: String) {
     val color = when (status.uppercase()) {
         "DELIVERED" -> Color(0xFF4CAF50)

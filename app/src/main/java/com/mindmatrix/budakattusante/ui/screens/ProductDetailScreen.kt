@@ -2,27 +2,23 @@ package com.mindmatrix.budakattusante.ui.screens
 
 import android.content.Intent
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -31,19 +27,13 @@ import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
-import com.mindmatrix.budakattusante.data.local.entity.ReviewEntity
 import com.mindmatrix.budakattusante.data.model.Product
 import com.mindmatrix.budakattusante.data.model.Artisan
 import com.mindmatrix.budakattusante.ui.components.*
 import com.mindmatrix.budakattusante.ui.theme.*
 import com.mindmatrix.budakattusante.ui.viewmodel.ProductViewModel
 import com.mindmatrix.budakattusante.ui.viewmodel.VoiceViewModel
-import kotlinx.coroutines.delay
 
-/**
- * Requirement 1, 3, 5, 10: Production-ready Product Details with Traceability, Reviews, and Wishlist.
- * Enhanced with AI Audio Descriptions (Requirement 9).
- */
 @Composable
 fun ProductDetailScreen(
     product: Product,
@@ -68,7 +58,7 @@ fun ProductDetailScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(SandBeige)) {
         Column(modifier = Modifier.verticalScroll(scrollState)) {
-            // Hero Image with Tribal Overlay
+            // Hero Image
             Box(modifier = Modifier.fillMaxWidth().height(380.dp)) {
                 AsyncImage(
                     model = product.imageUrl,
@@ -86,7 +76,6 @@ fun ProductDetailScreen(
                         )
                 )
                 
-                // Top Action Bar
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -104,7 +93,7 @@ fun ProductDetailScreen(
                             onClick = {
                                 val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
-                                    putExtra(Intent.EXTRA_TEXT, "Check out this tribal product on Budakattu Sante: ${product.name} - ₹${product.pricePerKg.toInt()}")
+                                    putExtra(Intent.EXTRA_TEXT, "Budakattu Sante: ${product.name} - ₹${product.pricePerKg.toInt()}")
                                     type = "text/plain"
                                 }
                                 context.startActivity(Intent.createChooser(sendIntent, null))
@@ -133,7 +122,6 @@ fun ProductDetailScreen(
                     FairTradeBadge(modifier = Modifier.align(Alignment.TopEnd).padding(top = 80.dp, end = 16.dp))
                 }
 
-                // Batch Summary
                 Surface(
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp),
                     color = Color.Black.copy(alpha = 0.7f),
@@ -153,16 +141,19 @@ fun ProductDetailScreen(
             }
 
             Column(modifier = Modifier.padding(24.dp)) {
-                // Pre-Order Timer
                 if (product.isPreOrder) {
                     HarvestCountdown(product.expectedHarvestDate)
                     Spacer(Modifier.height(24.dp))
                 }
 
-                // Header Info
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(product.name, style = MaterialTheme.typography.headlineLarge, color = ForestGreen, fontWeight = FontWeight.Black)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(product.name, style = MaterialTheme.typography.headlineLarge, color = ForestGreen, fontWeight = FontWeight.Black)
+                            IconButton(onClick = { voiceViewModel.speak(product.name) }) {
+                                Icon(Icons.AutoMirrored.Filled.VolumeUp, "Listen", tint = ForestGreen, modifier = Modifier.size(24.dp))
+                            }
+                        }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Star, null, tint = TribalGold, modifier = Modifier.size(16.dp))
                             Text(" ${product.rating} (${reviews.size} reviews)", style = MaterialTheme.typography.bodyMedium, color = EarthBrown)
@@ -207,6 +198,7 @@ fun ProductDetailScreen(
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     val location = LatLng(product.locationLat, product.locationLng)
+                    val markerState = rememberMarkerState(position = location)
                     GoogleMap(
                         modifier = Modifier.fillMaxSize(),
                         cameraPositionState = rememberCameraPositionState {
@@ -214,7 +206,7 @@ fun ProductDetailScreen(
                         },
                         uiSettings = MapUiSettings(zoomControlsEnabled = false, scrollGesturesEnabled = false)
                     ) {
-                        Marker(state = MarkerState(position = location), title = product.forestRegion)
+                        Marker(state = markerState, title = product.forestRegion)
                     }
                 }
 
@@ -222,9 +214,8 @@ fun ProductDetailScreen(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Product Story", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = ForestGreen, modifier = Modifier.weight(1f))
-                    // Audio Description Toggle (Requirement 9)
-                    IconButton(onClick = { voiceViewModel.speak(product.description) }) {
-                        Icon(Icons.Default.VolumeUp, "Listen to Story", tint = ForestGreen)
+                    IconButton(onClick = { voiceViewModel.speak("About this product: ${product.description}") }) {
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, "Listen to Story", tint = ForestGreen)
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -237,7 +228,6 @@ fun ProductDetailScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // Reviews Section
                 ReviewSection(reviews = reviews, onAddReview = { rating, comment ->
                     productViewModel.addReview(product.productId, rating, comment)
                 })
@@ -264,7 +254,6 @@ fun ProductDetailScreen(
             }
         }
 
-        // Floating Bottom Actions
         Surface(
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
             tonalElevation = 8.dp,
@@ -292,120 +281,10 @@ fun ProductDetailScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun ReviewSection(reviews: List<ReviewEntity>, onAddReview: (Double, String) -> Unit) {
-    var showDialog by remember { mutableStateOf(false) }
-    
-    Column {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Reviews", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = ForestGreen)
-            TextButton(onClick = { showDialog = true }) {
-                Text("Write Review", color = AccentOrange)
-            }
-        }
-        
-        if (reviews.isEmpty()) {
-            Text("No reviews yet. Be the first to share your experience!", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                reviews.take(3).forEach { review ->
-                    ReviewItem(review)
+                IconButton(onClick = { voiceViewModel.speak(if (product.isPreOrder) "Button to Pre-order now." else "Button to add to your tribal basket.") }) {
+                    Icon(Icons.AutoMirrored.Filled.VolumeUp, null, tint = ForestGreen)
                 }
             }
         }
-    }
-
-    if (showDialog) {
-        AddReviewDialog(onDismiss = { showDialog = false }, onConfirm = onAddReview)
-    }
-}
-
-@Composable
-fun ReviewItem(review: ReviewEntity) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(review.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                Spacer(Modifier.weight(1f))
-                repeat(5) { index ->
-                    Icon(
-                        Icons.Default.Star,
-                        null,
-                        modifier = Modifier.size(12.dp),
-                        tint = if (index < review.rating) TribalGold else Color.LightGray
-                    )
-                }
-            }
-            Spacer(Modifier.height(4.dp))
-            Text(review.comment, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-        }
-    }
-}
-
-@Composable
-fun AddReviewDialog(onDismiss: () -> Unit, onConfirm: (Double, String) -> Unit) {
-    var rating by remember { mutableStateOf(5.0) }
-    var comment by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Rate this Product") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                    repeat(5) { index ->
-                        IconButton(onClick = { rating = (index + 1).toDouble() }) {
-                            Icon(
-                                Icons.Default.Star,
-                                null,
-                                tint = if (index < rating) TribalGold else Color.LightGray
-                            )
-                        }
-                    }
-                }
-                OutlinedTextField(
-                    value = comment,
-                    onValueChange = { comment = it },
-                    label = { Text("Your experience") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onConfirm(rating, comment); onDismiss() }) {
-                Text("Submit")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
-    )
-}
-
-@Composable
-fun StockProgress(count: Int, total: Int) {
-    Column {
-        LinearProgressIndicator(
-            progress = { if (total > 0) count.toFloat() / total.toFloat() else 0f },
-            modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-            color = AccentOrange,
-            trackColor = AccentOrange.copy(alpha = 0.2f)
-        )
-        Text(
-            "Stock reserved: $count/$total",
-            style = MaterialTheme.typography.labelMedium,
-            color = EarthBrown,
-            modifier = Modifier.padding(top = 4.dp)
-        )
     }
 }

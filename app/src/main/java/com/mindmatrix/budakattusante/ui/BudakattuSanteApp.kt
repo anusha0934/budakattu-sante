@@ -13,47 +13,45 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.mindmatrix.budakattusante.data.model.UserRole
 import com.mindmatrix.budakattusante.ui.components.ConnectivityBanner
 import com.mindmatrix.budakattusante.ui.screens.*
 import com.mindmatrix.budakattusante.ui.viewmodel.*
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * Main Application Navigation Graph for Budakattu Sante.
+ * Implements MVVM Architecture with Hilt Injection.
+ * All features: Customer Dashboard, Vendor Management, Admin Controls, AI Voice, and Offline Support.
+ */
 @Composable
 fun BudakattuSanteApp() {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     
+    // ViewModels for global state and feature-specific logic
     val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
     val productViewModel: ProductViewModel = hiltViewModel()
     val orderViewModel: OrderViewModel = hiltViewModel()
     val vendorViewModel: VendorViewModel = hiltViewModel()
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val voiceViewModel: VoiceViewModel = hiltViewModel()
-    val addressViewModel: AddressViewModel = hiltViewModel()
-    val chatViewModel: ChatViewModel = hiltViewModel()
-    val adminViewModel: AdminViewModel = hiltViewModel()
     val notificationViewModel: NotificationViewModel = hiltViewModel()
+    val addressViewModel: AddressViewModel = hiltViewModel()
+    val adminViewModel: AdminViewModel = hiltViewModel()
     
+    // UI State Observers
     val connectivityStatus by connectivityViewModel.connectivityStatus.collectAsStateWithLifecycle()
     val productState by productViewModel.uiState.collectAsStateWithLifecycle()
     val orderState by orderViewModel.uiState.collectAsStateWithLifecycle()
     val userProfile by profileViewModel.userProfile.collectAsStateWithLifecycle()
-    val addresses by addressViewModel.addresses.collectAsStateWithLifecycle()
     val notifications by notificationViewModel.notifications.collectAsStateWithLifecycle()
+    val addresses by addressViewModel.addresses.collectAsStateWithLifecycle()
     
     val userRole = userProfile?.role ?: UserRole.NONE.name
 
-    // Requirement 10: AI Voice-to-Navigation Observer
-    LaunchedEffect(Unit) {
-        voiceViewModel.navigationIntent.collectLatest { route ->
-            navController.navigate(route) {
-                launchSingleTop = true
-            }
-        }
-    }
-
+    // Global Notification Handler for Repository messages
     LaunchedEffect(orderState.message) {
         orderState.message?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -68,10 +66,19 @@ fun BudakattuSanteApp() {
         }
     }
 
+    // Refresh profile on app launch if authenticated
     LaunchedEffect(Firebase.auth.currentUser) {
         if (Firebase.auth.currentUser != null) {
             profileViewModel.loadProfile()
-            addressViewModel.loadAddresses()
+        }
+    }
+
+    // AI Voice-assisted navigation observer
+    LaunchedEffect(Unit) {
+        voiceViewModel.navigationIntent.collect { route ->
+            if (route.isNotBlank()) {
+                navController.navigate(route)
+            }
         }
     }
 
@@ -83,6 +90,7 @@ fun BudakattuSanteApp() {
             startDestination = "splash",
             modifier = Modifier.weight(1f)
         ) {
+            // Requirement 2: Animated Splash Screen
             composable("splash") {
                 SplashScreen(onTimeout = {
                     val nextDest = when (userRole) {
@@ -97,6 +105,7 @@ fun BudakattuSanteApp() {
                 })
             }
             
+            // Requirement 3: Role Selection Screen
             composable("identity_gate") {
                 IdentityGateScreen(onRoleSelected = { role ->
                     scope.launch {
@@ -106,11 +115,13 @@ fun BudakattuSanteApp() {
                 })
             }
             
+            // Login Screen with Firebase Auth
             composable("login/{targetRole}", arguments = listOf(navArgument("targetRole") { type = NavType.StringType })) { bse ->
                 val targetRole = bse.arguments?.getString("targetRole") ?: UserRole.CUSTOMER.name
                 LoginScreen(navController = navController, targetRole = targetRole)
             }
 
+            // Requirement 1: Customer Home Dashboard
             composable("home") {
                 CustomerDashboard(
                     productViewModel = productViewModel,
@@ -127,7 +138,8 @@ fun BudakattuSanteApp() {
                     userName = userProfile?.name ?: "Mallamma"
                 )
             }
-            
+
+            // Requirement 10: Product Details with Traceability & Reviews
             composable("product_detail/{productId}") { bse ->
                 val productId = bse.arguments?.getString("productId") ?: ""
                 val product = productState.catalog.find { it.productId == productId }
@@ -135,75 +147,96 @@ fun BudakattuSanteApp() {
                     ProductDetailScreen(
                         product = product,
                         onBack = { navController.popBackStack() },
-                        onNavigateToConfirm = { qty, isPre ->
-                            orderViewModel.setPendingOrder(product, qty, userProfile?.name ?: "", userProfile?.phoneNumber ?: "", "", isPre)
-                            navController.navigate("order_confirm")
+                        onNavigateToConfirm = { qty, _ -> 
+                            navController.navigate("order_confirm/$productId/$qty")
                         },
-                        productViewModel = productViewModel
+                        productViewModel = productViewModel,
+                        voiceViewModel = voiceViewModel
                     )
                 }
             }
 
-            composable("order_confirm") {
-                val pending = orderViewModel.pendingOrderDetails
-                if (pending != null) {
+            // Requirement 12: Checkout Confirmation
+            composable("order_confirm/{productId}/{quantity}", arguments = listOf(
+                navArgument("productId") { type = NavType.StringType },
+                navArgument("quantity") { type = NavType.FloatType }
+            )) { bse ->
+                val productId = bse.arguments?.getString("productId") ?: ""
+                val quantity = bse.arguments?.getFloat("quantity")?.toDouble() ?: 1.0
+                val product = productState.catalog.find { it.productId == productId }
+                if (product != null) {
                     OrderConfirmScreen(
-                        product = pending.product,
-                        quantity = pending.qty,
+                        product = product,
+                        quantity = quantity,
                         addresses = addresses,
                         onBack = { navController.popBackStack() },
                         onAddAddress = { navController.navigate("address_management") },
-                        onProceedToPayment = { address ->
-                            orderViewModel.setPendingOrder(pending.product, pending.qty, address.name, address.phone, "${address.street}, ${address.city}", false)
+                        onProceedToPayment = { _ ->
                             navController.navigate("payment")
                         },
                         onConfirmReservation = { address ->
                             orderViewModel.placeOrder(
-                                Firebase.auth.currentUser?.uid ?: "",
-                                address.name,
-                                address.phone,
-                                "${address.street}, ${address.city}",
-                                "RESERVATION"
+                                buyerId = Firebase.auth.currentUser?.uid ?: "",
+                                buyerName = address.name,
+                                buyerPhone = address.phone,
+                                buyerAddress = "${address.houseNumber}, ${address.street}, ${address.village}, ${address.district}, ${address.state} - ${address.zipCode}",
+                                paymentMethod = "RESERVATION"
                             )
-                            navController.navigate("order_success/true") {
-                                popUpTo("home") { inclusive = false }
-                            }
+                            navController.navigate("order_success/true")
                         },
-                        orderViewModel = orderViewModel
+                        orderViewModel = orderViewModel,
+                        voiceViewModel = voiceViewModel
                     )
                 }
             }
 
+            // Requirement 13: Integrated Payment System
             composable("payment") {
                 PaymentScreen(
                     onBack = { navController.popBackStack() },
                     onPaymentSuccess = { method ->
                         val pending = orderViewModel.pendingOrderDetails
                         if (pending != null) {
-                            orderViewModel.placeOrder(
-                                Firebase.auth.currentUser?.uid ?: "",
-                                pending.name,
-                                pending.phone,
-                                pending.address,
-                                method
-                            )
-                            navController.navigate("order_success/false") {
-                                popUpTo("home") { inclusive = false }
+                            if (orderViewModel.isCartCheckout) {
+                                orderViewModel.placeCartOrders(
+                                    buyerId = Firebase.auth.currentUser?.uid ?: "",
+                                    buyerName = pending.name,
+                                    buyerPhone = pending.phone,
+                                    buyerAddress = pending.address,
+                                    paymentMethod = method
+                                )
+                            } else {
+                                orderViewModel.placeOrder(
+                                    buyerId = Firebase.auth.currentUser?.uid ?: "",
+                                    buyerName = pending.name,
+                                    buyerPhone = pending.phone,
+                                    buyerAddress = pending.address,
+                                    paymentMethod = method
+                                )
                             }
                         }
+                        navController.navigate("order_success/false")
                     }
                 )
             }
 
-            composable("order_success/{isPreOrder}", arguments = listOf(navArgument("isPreOrder") { type = NavType.BoolType })) { bse ->
-                val isPre = bse.arguments?.getBoolean("isPreOrder") ?: false
-                OrderSuccessScreen(isPreOrder = isPre) {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                }
+            // Order Success Page
+            composable("order_success/{isPreOrder}", arguments = listOf(
+                navArgument("isPreOrder") { type = NavType.BoolType }
+            )) { bse ->
+                val isPreOrder = bse.arguments?.getBoolean("isPreOrder") ?: false
+                OrderSuccessScreen(
+                    isPreOrder = isPreOrder,
+                    onHome = {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    },
+                    voiceViewModel = voiceViewModel
+                )
             }
 
+            // Requirement 11: Order Management (Buyer)
             composable("orders") {
                 MyOrdersScreen(
                     orders = orderState.orders,
@@ -212,55 +245,21 @@ fun BudakattuSanteApp() {
                     onCategories = { navController.navigate("categories") },
                     onCart = { navController.navigate("cart") },
                     onProfile = { navController.navigate("profile") },
-                    onTrackOrder = { orderId -> navController.navigate("track_order/$orderId") }
+                    onTrackOrder = { orderId -> navController.navigate("tracking/$orderId") }
                 )
             }
 
-            composable("track_order/{orderId}") { bse ->
+            // Requirement 10: Live Delivery Tracking
+            composable("tracking/{orderId}") { bse ->
                 val orderId = bse.arguments?.getString("orderId") ?: ""
                 CustomerDeliveryTrackingScreen(orderId = orderId, onBack = { navController.popBackStack() })
             }
 
-            composable("profile") {
-                CustomerProfileScreen(
-                    onBack = { navController.popBackStack() },
-                    onLogout = { 
-                        Firebase.auth.signOut()
-                        navController.navigate("identity_gate") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    onSwitchRole = {
-                        scope.launch {
-                            profileViewModel.updateRole(UserRole.VENDOR)
-                            navController.navigate("vendor_dashboard") {
-                                popUpTo("home") { inclusive = true }
-                            }
-                        }
-                    },
-                    onViewOrders = { navController.navigate("orders") },
-                    onHome = { navController.navigate("home") },
-                    onCategories = { navController.navigate("categories") },
-                    onCart = { navController.navigate("cart") },
-                    onViewAddresses = { navController.navigate("address_management") },
-                    onViewNotifications = { navController.navigate("notifications") },
-                    onEditProfile = { navController.navigate("edit_profile") },
-                    userProfileImage = userProfile?.profileImageUrl,
-                    userName = userProfile?.name ?: "Mallamma"
-                )
-            }
-
-            composable("edit_profile") {
-                EditProfileScreen(
-                    profileViewModel = profileViewModel,
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
+            // Shopping Cart / Basket
             composable("cart") {
                 CartScreen(
                     onBack = { navController.popBackStack() },
-                    onCheckout = { navController.navigate("order_confirm") },
+                    onCheckout = { navController.navigate("cart_checkout") },
                     onHome = { navController.navigate("home") },
                     onCategories = { navController.navigate("categories") },
                     onOrders = { navController.navigate("orders") },
@@ -270,10 +269,55 @@ fun BudakattuSanteApp() {
                 )
             }
 
+            composable("cart_checkout") {
+                CartCheckoutScreen(
+                    addresses = addresses,
+                    onBack = { navController.popBackStack() },
+                    onAddAddress = { navController.navigate("address_management") },
+                    onProceedToPayment = { _ -> navController.navigate("payment") },
+                    orderViewModel = orderViewModel
+                )
+            }
+
+            // Profile & Settings
+            composable("profile") {
+                CustomerProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = {
+                        Firebase.auth.signOut()
+                        navController.navigate("identity_gate") { popUpTo(0) }
+                    },
+                    onSwitchRole = { 
+                        if (userRole == UserRole.VENDOR.name) navController.navigate("vendor_dashboard") 
+                        else navController.navigate("identity_gate")
+                    },
+                    onViewOrders = { navController.navigate("orders") },
+                    onHome = { navController.navigate("home") },
+                    onCategories = { navController.navigate("categories") },
+                    onCart = { navController.navigate("cart") },
+                    onViewAddresses = { navController.navigate("address_management") },
+                    onViewNotifications = { navController.navigate("notifications") },
+                    onEditProfile = { navController.navigate("vendor_edit_business") },
+                    userProfileImage = userProfile?.profileImageUrl,
+                    userName = userProfile?.name ?: "Mallamma"
+                )
+            }
+
+            // Address Book Management
+            composable("address_management") {
+                AddressManagementScreen(
+                    addresses = addresses,
+                    onAddAddress = { address -> addressViewModel.addAddress(address) },
+                    onDeleteAddress = { address -> addressViewModel.deleteAddress(address) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Seasonal Categories Explorer
             composable("categories") {
                 CategoriesScreen(
-                    onCategoryClick = { cat -> 
-                        productViewModel.selectCategory(cat)
+                    onCategoryClick = { category ->
+                        productViewModel.selectCategory(category)
                         navController.navigate("home")
                     },
                     onBack = { navController.popBackStack() },
@@ -284,19 +328,11 @@ fun BudakattuSanteApp() {
                 )
             }
 
-            composable("address_management") {
-                AddressManagementScreen(
-                    addresses = addresses,
-                    onAddAddress = { addressViewModel.addAddress(it) },
-                    onDeleteAddress = { addressViewModel.deleteAddress(it) },
-                    onBack = { navController.popBackStack() }
-                )
-            }
-            
+            // Requirement 1 & 4: Vendor Dashboard
             composable("vendor_dashboard") {
                 VendorDashboard(
                     inventory = productState.catalog.filter { it.vendorId == Firebase.auth.currentUser?.uid },
-                    orders = orderState.orders.filter { it.vendorId == Firebase.auth.currentUser?.uid },
+                    orders = orderState.orders,
                     onSync = { vendorViewModel.triggerSync() },
                     onNavigate = { route -> navController.navigate(route) },
                     voiceViewModel = voiceViewModel,
@@ -304,17 +340,50 @@ fun BudakattuSanteApp() {
                 )
             }
             
+            // Requirement 7: Publish Harvest Screen
             composable("vendor_add_product") {
                 VendorProductFormScreen(
                     vendorViewModel = vendorViewModel,
-                    onAddProduct = { batch ->
-                        productViewModel.addBatch(batch)
-                        navController.popBackStack()
-                    },
+                    productViewModel = productViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
 
+            // Requirement 4 & 5: Vendor Profile & Business Details
+            composable("vendor_profile") {
+                VendorProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = {
+                        Firebase.auth.signOut()
+                        navController.navigate("identity_gate") { popUpTo(0) }
+                    },
+                    onSwitchRole = { navController.navigate("home") },
+                    onEditBusiness = { navController.navigate("vendor_edit_business") },
+                    onManageArtisans = { /* TODO */ },
+                    onViewPayments = { navController.navigate("vendor_payments") },
+                    onViewAnalytics = { navController.navigate("vendor_analytics") },
+                    userProfile = userProfile
+                )
+            }
+
+            composable("vendor_edit_business") {
+                EditProfileScreen(
+                    profileViewModel = profileViewModel,
+                    onBack = { navController.popBackStack() },
+                    voiceViewModel = voiceViewModel
+                )
+            }
+
+            // Requirement 11: Vendor Order Management
+            composable("vendor_orders") {
+                VendorOrdersScreen(
+                    orders = orderState.orders.filter { it.vendorId == Firebase.auth.currentUser?.uid },
+                    onBack = { navController.popBackStack() },
+                    onUpdateStatus = { id, status -> orderViewModel.updateOrderStatus(id, status) }
+                )
+            }
+
+            // Requirement 6: Inventory Management
             composable("vendor_products") {
                 VendorProductsScreen(
                     inventory = productState.catalog.filter { it.vendorId == Firebase.auth.currentUser?.uid },
@@ -323,14 +392,7 @@ fun BudakattuSanteApp() {
                 )
             }
 
-            composable("vendor_orders") {
-                VendorOrdersScreen(
-                    orders = orderState.orders.filter { it.vendorId == Firebase.auth.currentUser?.uid },
-                    onBack = { navController.popBackStack() },
-                    onUpdateStatus = { orderId, status -> orderViewModel.updateOrderStatus(orderId, status) }
-                )
-            }
-            
+            // Requirement 10: Vendor Analytics, Heatmap & Supply Log
             composable("vendor_analytics") {
                 VendorAnalyticsScreen(
                     vendorViewModel = vendorViewModel,
@@ -338,77 +400,53 @@ fun BudakattuSanteApp() {
                 )
             }
 
-            composable("vendor_payments") {
-                PaymentScreen(
-                    onBack = { navController.popBackStack() },
-                    onPaymentSuccess = { method ->
-                        Toast.makeText(context, "Payment processing enabled via $method", Toast.LENGTH_SHORT).show()
-                        navController.popBackStack()
-                    }
+            composable("vendor_supply_log") {
+                SupplyLogScreen(
+                    productViewModel = productViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
 
-            composable("vendor_profile") {
-                VendorProfileScreen(
-                    onBack = { navController.popBackStack() },
-                    onLogout = {
-                        Firebase.auth.signOut()
-                        navController.navigate("identity_gate") { popUpTo(0) { inclusive = true } }
-                    },
-                    onSwitchRole = {
-                        scope.launch {
-                            profileViewModel.updateRole(UserRole.CUSTOMER)
-                            navController.navigate("home") { popUpTo("vendor_dashboard") { inclusive = true } }
-                        }
-                    },
-                    userProfile = userProfile
-                )
-            }
-
-            composable("notifications") {
-                NotificationScreen(
-                    notifications = notifications,
-                    onBack = { navController.popBackStack() },
-                    onMarkAsRead = { notificationViewModel.markAsRead(it) }
-                )
-            }
-
-            composable("vendor_notifications") {
-                NotificationScreen(
-                    notifications = notifications.filter { it.type.startsWith("VENDOR") || it.type == "ORDER_UPDATE" || it.type == "BATCH_APPROVAL" },
-                    onBack = { navController.popBackStack() },
-                    onMarkAsRead = { notificationViewModel.markAsRead(it) }
-                )
-            }
-
+            // QR Traceability for Batches
             composable("batch_details/{batchId}") { bse ->
                 val batchId = bse.arguments?.getString("batchId") ?: ""
                 BatchDetailsScreen(batchId = batchId, onBack = { navController.popBackStack() })
             }
 
+            // Admin Control Center
             composable("admin_dashboard") {
                 AdminDashboardScreen(
                     viewModel = adminViewModel,
-                    onBack = { 
-                        Firebase.auth.signOut()
-                        navController.navigate("identity_gate") { popUpTo(0) { inclusive = true } }
-                    }
-                )
-            }
-
-            composable("tribal_ai") {
-                ChatScreen(
-                    viewModel = chatViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
-            
+
+            // Requirement 15: Tribal Markets & Shops Map
             composable("map") {
                 MapScreen(onBack = { navController.popBackStack() })
             }
 
-            composable("faq") {
-                FaqScreen(onBack = { navController.popBackStack() })
+            // Notifications Explorer
+            composable("notifications") {
+                NotificationScreen(
+                    notifications = notifications,
+                    onBack = { navController.popBackStack() },
+                    onMarkAsRead = { id -> notificationViewModel.markAsRead(id) }
+                )
+            }
+            
+            // Vendor Notifications
+            composable("vendor_notifications") {
+                NotificationScreen(
+                    notifications = notifications,
+                    onBack = { navController.popBackStack() },
+                    onMarkAsRead = { id -> notificationViewModel.markAsRead(id) }
+                )
+            }
+            
+            // Vendor Wallet & Payments
+            composable("vendor_payments") {
+                PaymentScreen(onBack = { navController.popBackStack() }, onPaymentSuccess = { /* Handle vendor cash-out */ })
             }
         }
     }

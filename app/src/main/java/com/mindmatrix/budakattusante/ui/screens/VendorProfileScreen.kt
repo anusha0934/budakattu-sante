@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,9 +20,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.mindmatrix.budakattusante.data.model.UserProfile
+import com.mindmatrix.budakattusante.ui.components.ProfileOptionItem
+import com.mindmatrix.budakattusante.ui.components.StatCard
 import com.mindmatrix.budakattusante.ui.theme.*
+import com.mindmatrix.budakattusante.ui.viewmodel.VoiceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,15 +35,25 @@ fun VendorProfileScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onSwitchRole: () -> Unit,
-    userProfile: UserProfile?
+    onEditBusiness: () -> Unit,
+    onManageArtisans: () -> Unit,
+    onViewPayments: () -> Unit,
+    onViewAnalytics: () -> Unit,
+    userProfile: UserProfile?,
+    voiceViewModel: VoiceViewModel = hiltViewModel()
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Vendor Profile", fontWeight = FontWeight.Bold) },
+                title = { Text("Shop Profile", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { voiceViewModel.speak("Your shop profile. Manage your business details, artisans, and payments here.") }) {
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, "Help", tint = ForestGreen)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Cream)
@@ -83,14 +99,14 @@ fun VendorProfileScreen(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = userProfile?.name ?: "Artisan",
+                text = userProfile?.businessName?.ifBlank { "Tribal Shop" } ?: "Tribal Shop",
                 style = MaterialTheme.typography.headlineMedium,
                 color = ForestGreen,
                 fontWeight = FontWeight.Bold
             )
             
             Text(
-                text = "Certified Forest Producer",
+                text = "Community: ${userProfile?.tribeName?.ifBlank { "B.R. Hills" } ?: "B.R. Hills"}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = EarthBrown
             )
@@ -104,15 +120,15 @@ fun VendorProfileScreen(
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Products",
+                    label = "Items",
                     value = "12",
                     icon = Icons.Default.Inventory2
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Rating",
+                    label = "Trust",
                     value = "4.9",
-                    icon = Icons.Default.Star
+                    icon = Icons.Default.Verified
                 )
             }
 
@@ -120,23 +136,39 @@ fun VendorProfileScreen(
 
             // Options
             ProfileOptionItem(
-                title = "Business Details",
-                subtitle = "Manage your shop and tribal certification",
-                icon = Icons.Default.Business,
-                onClick = { /* Navigate to Edit Business */ }
+                title = "Edit Business Details",
+                subtitle = "Shop name, location, and UPI info",
+                icon = Icons.Default.Edit,
+                onClick = onEditBusiness
             )
+            
             ProfileOptionItem(
-                title = "Switch to Buyer Mode",
+                title = "Manage Artisans",
+                subtitle = "Add family members and collectors",
+                icon = Icons.Default.Groups,
+                onClick = onManageArtisans
+            )
+            
+            ProfileOptionItem(
+                title = "Payments & Wallet",
+                subtitle = "Earnings and payout history",
+                icon = Icons.Default.AccountBalanceWallet,
+                onClick = onViewPayments
+            )
+            
+            ProfileOptionItem(
+                title = "Analytics & Supply Log",
+                subtitle = "Track your sales and harvest history",
+                icon = Icons.Default.BarChart,
+                onClick = onViewAnalytics
+            )
+
+            ProfileOptionItem(
+                title = "Switch to Customer Mode",
                 subtitle = "Shop for pure forest products",
                 icon = Icons.Default.ShoppingBag,
                 tint = AccentOrange,
                 onClick = onSwitchRole
-            )
-            ProfileOptionItem(
-                title = "Settings",
-                subtitle = "App preferences and language",
-                icon = Icons.Default.Settings,
-                onClick = { /* Settings */ }
             )
             
             Spacer(Modifier.height(48.dp))
@@ -149,32 +181,10 @@ fun VendorProfileScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = EarthBrown),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Logout", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Logout from Sante", color = Color.White, fontWeight = FontWeight.Bold)
             }
-        }
-    }
-}
-
-@Composable
-fun StatCard(
-    modifier: Modifier = Modifier,
-    label: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(icon, null, tint = ForestGreen, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.height(8.dp))
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
